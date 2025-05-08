@@ -1,0 +1,19 @@
+{
+  "name": "smart-energy-backend",
+  "version": "1.0.0",
+  "description": "Backend for Smart Home Energy Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Shaik Naseeroddin",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongoose": "^7.8.7",
+    "socket.io": "^4.8.1"
+  }
+}

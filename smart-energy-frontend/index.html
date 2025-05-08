@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Home Energy Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #45a049;
+      --accent-color: #3e8e41;
+      --dark-color: #333;
+      --light-color: #f4f4f9;
+      --warning-color: #ff9800;
+      --danger-color: #f44336;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--light-color);
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    nav ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+    
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    nav ul li a:hover, nav ul li a.active {
+      background-color: rgba(255,255,255,0.2);
+    }
+    
+    main {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    
+    h2 {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    h2 i {
+      font-size: 1.2em;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 1rem 0;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
+    }
+    
+    .card h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+    
+    #suggestions-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    
+    #suggestions-list li {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background-color: #f8f9fa;
+      border-left: 4px solid var(--primary-color);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    #suggestions-list li i {
+      color: var(--primary-color);
+    }
+    
+    .suggestion-critical {
+      border-left-color: var(--danger-color);
+      background-color: #fdecea;
+    }
+    
+    .suggestion-critical i {
+      color: var(--danger-color);
+    }
+    
+    .suggestion-warning {
+      border-left-color: var(--warning-color);
+      background-color: #fff8e1;
+    }
+    
+    .suggestion-warning i {
+      color: var(--warning-color);
+    }
+    
+    form {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    form label {
+      font-weight: bold;
+      color: var(--dark-color);
+    }
+    
+    form input, form select, form textarea {
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: border 0.3s ease;
+    }
+    
+    form input:focus, form select:focus, form textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    
+    form button {
+      padding: 0.75rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    form button:hover {
+      background-color: var(--secondary-color);
+    }
+    
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .device-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--primary-color);
+      transition: transform 0.3s ease;
+    }
+    
+    .device-card:hover {
+      transform: translateY(-3px);
+    }
+    
+    .device-card h3 {
+      margin-top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .device-status {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    
+    .status-on {
+      background-color: #e8f5e9;
+      color: var(--primary-color);
+    }
+    
+    .status-off {
+      background-color: #ffebee;
+      color: var(--danger-color);
+    }
+    
+    .device-details {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .device-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #d32f2f;
+    }
+    
+    footer {
+      background-color: var(--dark-color);
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .energy-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    
+    .stat-card h3 {
+      margin-top: 0;
+      color: #666;
+      font-size: 1rem;
+    }
+    
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin: 0.5rem 0;
+    }
+    
+    .stat-card .unit {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .comparison-container {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .comparison-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.9rem;
+    }
+    
+    .comparison-up {
+      color: var(--danger-color);
+    }
+    
+    .comparison-down {
+      color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+      nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .energy-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    /* Login System Styles */
+#login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.login-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 300px;
+}
+
+.login-box h2 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+.login-box input, .login-box select {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.login-box button {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+#login-message {
+  color: var(--danger-color);
+  margin-top: 10px;
+  height: 16px;
+}
+
+#user-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+#logout-btn {
+  background: var(--danger-color);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+  </style>
+</head>
+<body>
+  <!-- Login Overlay -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2>Smart Energy Login</h2>
+    <select id="login-role">
+      <option value="homeowner">Homeowner</option>
+      <option value="admin" selected>Admin</option>
+    </select>
+    <input type="text" id="login-username" placeholder="Username" value="admin">
+    <input type="password" id="login-password" placeholder="Password">
+    <button id="login-btn">Login</button>
+    <div id="login-message"></div>
+  </div>
+</div>
+
+<!-- User Info -->
+<div id="user-info">
+  <span id="current-user">Welcome, Admin</span>
+  <button id="logout-btn">Logout</button>
+</div>
+  <header>
+    <h1><i class="fas fa-home"></i> Smart Home Energy Management System</h1>
+    <nav>
+      <ul>
+        <li><a href="#dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="#predictions"><i class="fas fa-chart-line"></i> Predictions</a></li>
+        <li><a href="#optimization"><i class="fas fa-lightbulb"></i> Optimization</a></li>
+        <li><a href="#admin"><i class="fas fa-cog"></i> Admin Panel</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Dashboard Section -->
+    <section id="dashboard">
+      <h2><i class="fas fa-tachometer-alt"></i> Energy Usage Dashboard</h2>
+      
+      <div class="energy-stats">
+        <div class="stat-card">
+          <h3>Current Usage</h3>
+          <div class="value">1.25</div>
+          <div class="unit">kW</div>
+          <div class="comparison-container">
+            <span class="comparison-badge comparison-up">
+              <i class="fas fa-arrow-up"></i> 12% from yesterday
+            </span>
+          </div>
+        </div>
+
+        <div class="stat-card" id="live-cost-card">
+          <h3>Real-Time Cost</h3>
+          <div class="value" id="live-cost-value">₹0.00</div>
+          <div class="unit">per hour</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Today's Consumption</h3>
+          <div class="value">8.7</div>
+          <div class="unit">kWh</div>
+          <div class="comparison-container">
+            <span class="comparison-badge comparison-up">
+              <i class="fas fa-arrow-up"></i> 5% from average
+            </span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Monthly Consumption</h3>
+          <div class="value">265</div>
+          <div class="unit">kWh</div>
+          <div class="comparison-container">
+            <span class="comparison-badge comparison-down">
+              <i class="fas fa-arrow-down"></i> 8% from last month
+            </span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>Estimated Cost</h3>
+          <div class="value">₹3,299</div>
+          <div class="unit">this month</div>
+          <div class="comparison-container">
+            <span class="comparison-badge comparison-down">
+              <i class="fas fa-arrow-down"></i> ₹311 saved
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="energyUsageChart"></canvas>
+      </div>
+      
+      <div class="card">
+        <h3>Active Devices</h3>
+        <div class="card">
+         
+        </div>
+        
+        <div class="devices-grid" id="dashboard-devices">
+          <!-- Devices will be dynamically inserted here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Predictions Section -->
+    <section id="predictions">
+      <h2><i class="fas fa-chart-line"></i> Energy Consumption Predictions</h2>
+      <div class="chart-container">
+        <canvas id="energyPredictionChart"></canvas>
+      </div>
+      
+      <div class="card">
+        <h3>Prediction Insights</h3>
+        <p>Based on your usage patterns and weather forecasts, we predict higher energy consumption in the upcoming summer months due to increased AC usage. Consider these adjustments to optimize your energy use:</p>
+        <ul id="prediction-insights">
+          <li><i class="fas fa-check-circle"></i> Pre-cool your home during off-peak hours (before 2 PM)</li>
+          <li><i class="fas fa-check-circle"></i> Use ceiling fans to complement your AC</li>
+          <li><i class="fas fa-check-circle"></i> Schedule regular AC maintenance for optimal efficiency</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Optimization Suggestions Section -->
+    <section id="optimization">
+      <h2><i class="fas fa-lightbulb"></i> Energy Optimization Suggestions</h2>
+      <ul id="suggestions-list">
+        <li class="suggestion-critical">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>Living Room AC has been running continuously for 4 hours. Consider turning it off or increasing the temperature by 2°F.</span>
+        </li>
+        <li class="suggestion-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Kitchen lights are on during daylight hours. Switch to natural light or install motion sensors.</span>
+        </li>
+        <li>
+          <i class="fas fa-info-circle"></i>
+          <span>Your refrigerator is 8 years old. Replacing it with an ENERGY STAR model could save you ₹5,810/year.</span>
+        </li>
+        <li>
+          <i class="fas fa-info-circle"></i>
+          <span>15% of your energy is used during peak rate hours (4-9 PM). Shift non-essential usage to other times.</span>
+        </li>
+        <li>
+          <i class="fas fa-info-circle"></i>
+          <span>Consider installing solar panels. Based on your roof size, you could offset 65% of your energy needs.</span>
+        </li>
+        <li class="suggestion-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>3 devices are in standby mode, consuming 45W continuously. Use smart plugs to completely power them off.</span>
+        </li>
+      </ul>
+      
+      <div class="card">
+        <h3>Potential Savings</h3>
+        <p>Implementing these suggestions could save you approximately <strong>₹1,826/month</strong> or <strong>₹21,912/year</strong> on your energy bills.</p>
+        <button class="btn btn-primary"><i class="fas fa-calendar-alt"></i> Schedule Optimization Plan</button>
+      </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="admin">
+      <h2><i class="fas fa-cog"></i> Admin Panel</h2>
+
+      <button onclick="sendPrediction()" style="
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #28a745;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    ">Send Test Prediction</button>
+
+      
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3>Add New Device</h3>
+          <form id="add-device-form">
+            <div class="form-group">
+              <label for="device-name">Device Name:</label>
+              <input type="text" id="device-name" name="device-name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="device-type">Device Type:</label>
+              <select id="device-type" name="device-type" required>
+                <option value="">Select type</option>
+                <option value="lighting">Lighting</option>
+                <option value="appliance">Appliance</option>
+                <option value="hvac">HVAC</option>
+                <option value="electronics">Electronics</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="device-wattage">Wattage (W):</label>
+              <input type="number" id="device-wattage" name="device-wattage" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="device-location">Location:</label>
+              <input type="text" id="device-location" name="device-location">
+            </div>
+            
+            <div class="form-group">
+              <label for="device-notes">Notes:</label>
+              <textarea id="device-notes" name="device-notes" rows="3"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Device</button>
+          </form>
+        </div>
+                
+        <div class="card">
+          <h3>System Settings</h3>
+          <form id="system-settings-form">
+            <div class="form-group">
+              <label for="energy-rate">Energy Rate (₹/kWh):</label>
+              <input type="number" id="energy-rate" name="energy-rate" step="0.01" value="12.45" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="peak-hours">Peak Hours:</label>
+              <select id="peak-hours" name="peak-hours" required>
+                <option value="4-9">4 PM - 9 PM</option>
+                <option value="3-8">3 PM - 8 PM</option>
+                <option value="5-10">5 PM - 10 PM</option>
+                <option value="none">No Peak Hours</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="notifications">Notifications:</label>
+              <select id="notifications" name="notifications" required>
+                <option value="enabled">Enabled</option>
+                <option value="disabled">Disabled</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="energy-alerts" name="energy-alerts"> Enable energy spike alerts
+              </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Device Management</h3>
+        <div class="devices-grid" id="device-manager">
+          <!-- Devices will be dynamically inserted here -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Smart Home Energy Management System | <a href="#" style="color: white;">Privacy Policy</a> | <a href="#" style="color: white;">Terms of Service</a></p>
+  </footer>
+
+  <script>
+    // Login System
+const users = {
+  homeowner: { username: "home", password: "home", name: "Homeowner" },
+  admin: { username: "admin", password: "admin", name: "Administrator" }
+};
+
+document.getElementById('login-btn').addEventListener('click', function() {
+  const role = document.getElementById('login-role').value;
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const messageEl = document.getElementById('login-message');
+  
+  messageEl.textContent = '';
+  
+  if (users[role] && username === users[role].username && password === users[role].password) {
+    // Successful login
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('user-info').style.display = 'flex';
+    document.getElementById('current-user').textContent = `Welcome, ${users[role].name}`;
+    
+    // Toggle Admin Panel based on role
+    const adminTab = document.querySelector('nav ul li:nth-child(4)');
+    const adminSection = document.getElementById('admin');
+    
+    if (role === 'admin') {
+      adminTab.style.display = 'block';
+      adminSection.style.display = 'block';
+    } else {
+      adminTab.style.display = 'none';
+      adminSection.style.display = 'none';
+    }
+  } else {
+    messageEl.textContent = 'Incorrect password';
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', function() {
+  // Reset UI
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('user-info').style.display = 'none';
+  document.getElementById('login-password').value = '';
+  
+  // Restore Admin Panel for next login
+  document.querySelector('nav ul li:nth-child(4)').style.display = 'block';
+  document.getElementById('admin').style.display = 'block';
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('user-info').style.display = 'none';
+});
+    // Add this to your frontend code (before other scripts)
+const API_URL = "http://localhost:5000/api";
+
+// 1. Load Devices on Startup
+async function loadDevices() {
+  try {
+    const response = await fetch(`${API_URL}/status`);
+    const data = await response.json();
+    console.log("Connection Status:", data);
+    
+    // Update your UI here (replace with your actual rendering function)
+    document.getElementById('status').innerText = `Backend: ${data.status}, DB: ${data.database}`;
+  } catch (err) {
+    console.error("Connection Failed:", err);
+  }
+}
+
+// 2. Test Data Submission (Add to Admin Panel)
+async function testAddDevice() {
+  await fetch(`${API_URL}/energy/predict`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      actualUsage: 2.4,
+      devices: [{
+  deviceId: "1",
+  power: 500,
+  duration: 2,
+  label: "Washing Machine - 30 min Cycle"
+}]
+
+    })
+  });
+  alert("Test data sent!");
+}
+
+async function loadMonthlyStats() {
+  try {
+    const res = await fetch('http://localhost:5000/api/energy/summary/monthly');
+    const stats = await res.json();
+
+    if (!stats || stats.days === 0) {
+      return alert("📉 No usage data this month.");
+    }
+
+    alert(`📊 Monthly Stats:
+Total: ${stats.total} kWh
+Average per Day: ${stats.avgPerDay} kWh
+Max in a Day: ${stats.maxUsage} kWh
+Days recorded: ${stats.days}`);
+  } catch (err) {
+    console.error("Monthly stats fetch error:", err);
+    alert("⚠️ Failed to load monthly stats.");
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadDevices);
+    // Device storage array
+    let devices = [
+      {
+        id: 1,
+        name: "Living Room AC",
+        type: "hvac",
+        wattage: 1200,
+        location: "Living Room",
+        status: "on",
+        notes: "Main cooling unit"
+      },
+      {
+        id: 2,
+        name: "Kitchen Lights",
+        type: "lighting",
+        wattage: 300,
+        location: "Kitchen",
+        status: "on",
+        notes: "LED strip lights"
+      },
+      {
+        id: 3,
+        name: "Refrigerator",
+        type: "appliance",
+        wattage: 150,
+        location: "Kitchen",
+        status: "on",
+        notes: "10-year old model"
+      },
+      {
+        id: 4,
+        name: "Home Office",
+        type: "electronics",
+        wattage: 800,
+        location: "Office",
+        status: "off",
+        notes: "Computer and peripherals"
+      }
+    ];
+
+    // Function to render devices in both dashboard and device manager
+    function renderDevices() {
+      const dashboardGrid = document.querySelector('#dashboard-devices');
+      const deviceManagerGrid = document.querySelector('#device-manager');
+      
+      dashboardGrid.innerHTML = '';
+      deviceManagerGrid.innerHTML = '';
+      
+      devices.forEach(device => {
+        const deviceCard = document.createElement('div');
+        deviceCard.className = 'device-card';
+        deviceCard.innerHTML = `
+          <h3>${device.name} <span class="device-status status-${device.status}">${device.status.toUpperCase()}</span></h3>
+          <div class="device-details">
+            <div><i class="fas fa-bolt"></i> ${device.wattage}W</div>
+            <div><i class="fas fa-home"></i> ${device.location}</div>
+            <div><i class="fas fa-tag"></i> ${device.type.charAt(0).toUpperCase() + device.type.slice(1)}</div>
+            ${device.notes ? `<div><i class="fas fa-sticky-note"></i> ${device.notes}</div>` : ''}
+          </div>
+          <div class="device-actions">
+            <button class="btn btn-primary" onclick="toggleDeviceStatus(${device.id})">
+              <i class="fas fa-power-off"></i> Turn ${device.status === 'on' ? 'Off' : 'On'}
+            </button>
+          </div>
+        `;
+        
+        // Add to both dashboard and device manager
+        dashboardGrid.appendChild(deviceCard.cloneNode(true));
+        deviceManagerGrid.appendChild(deviceCard);
+      });
+    }
+
+    // Device form submission
+    document.getElementById('add-device-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const newDevice = {
+        id: devices.length > 0 ? Math.max(...devices.map(d => d.id)) + 1 : 1,
+        name: document.getElementById('device-name').value,
+        type: document.getElementById('device-type').value,
+        wattage: parseInt(document.getElementById('device-wattage').value),
+        location: document.getElementById('device-location').value,
+        status: 'on', // default to on when added
+        notes: document.getElementById('device-notes').value
+      };
+      
+      devices.push(newDevice);
+      renderDevices();
+      
+      // Show success message
+      alert(`Device "${newDevice.name}" added successfully!`);
+      
+      // Reset form
+      this.reset();
+    });
+
+    // Toggle device status
+    function toggleDeviceStatus(deviceId) {
+      const device = devices.find(d => d.id === deviceId);
+      device.status = device.status === 'on' ? 'off' : 'on';
+      renderDevices();
+    }
+// ✅ Add this directly below
+function updateLiveCost() {
+  const energyRate = parseFloat(document.getElementById('energy-rate')?.value || 12.45); // ₹/kWh
+  const activeDevices = devices.filter(d => d.status === 'on');
+  const totalWatts = activeDevices.reduce((sum, d) => sum + d.wattage, 0);
+  const kWh = totalWatts / 1000;
+  const cost = kWh * energyRate;
+
+  document.getElementById('live-cost-value').textContent = `₹${cost.toFixed(2)}`;
+}
+    // System settings form
+    document.getElementById('system-settings-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const energyRate = document.getElementById('energy-rate').value;
+      const peakHours = document.getElementById('peak-hours').value;
+      
+      alert(`System settings updated!\nEnergy Rate: ₹${energyRate}/kWh\nPeak Hours: ${peakHours}`);
+    });
+
+    // Chart.js configuration for energy usage (6 months)
+    const energyUsageCtx = document.getElementById('energyUsageChart').getContext('2d');
+    const energyUsageChart = new Chart(energyUsageCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+          label: 'Energy Usage (kWh)',
+          data: [320, 290, 310, 280, 260, 275],
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }, {
+          label: 'Target Usage',
+          data: [300, 280, 290, 270, 250, 260],
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.1)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'xy',
+            },
+            pan: {
+              enabled: true,
+              mode: 'xy',
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          },
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Energy Usage (kWh)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Month'
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        }
+      }
+    });
+
+    // Chart.js configuration for energy predictions (6 months)
+    const energyPredictionCtx = document.getElementById('energyPredictionChart').getContext('2d');
+    const energyPredictionChart = new Chart(energyPredictionCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+          label: 'Predicted Energy Usage (kWh)',
+          data: [310, 340, 290, 270, 250, 280],
+          backgroundColor: 'rgba(153, 102, 255, 0.6)',
+          borderColor: 'rgba(153, 102, 255, 1)',
+          borderWidth: 1,
+        }, {
+          label: 'Potential Savings',
+          data: [280, 310, 260, 240, 220, 250],
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'xy',
+            },
+            pan: {
+              enabled: true,
+              mode: 'xy',
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          },
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Energy Usage (kWh)'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Month'
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          axis: 'x',
+          intersect: false
+        }
+      }
+    });
+
+    // Navigation active state
+    document.querySelectorAll('nav ul li a').forEach(link => {
+      link.addEventListener('click', function() {
+        document.querySelectorAll('nav ul li a').forEach(el => el.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Simulate real-time data updates
+    setInterval(() => {
+      // Update current usage with random fluctuation
+      const currentUsageElement = document.querySelector('.energy-stats .value');
+      const currentUsage = parseFloat(currentUsageElement.textContent);
+      const fluctuation = (Math.random() * 0.3 - 0.15).toFixed(2);
+      const newUsage = Math.max(0.5, (currentUsage + parseFloat(fluctuation)).toFixed(2));
+      currentUsageElement.textContent = newUsage;
+      
+      // Update comparison badge color based on usage
+      const comparisonBadge = document.querySelector('.energy-stats .comparison-badge');
+      if (newUsage > 1.3) {
+        comparisonBadge.className = 'comparison-badge comparison-up';
+        comparisonBadge.innerHTML = '<i class="fas fa-arrow-up"></i> ' + (Math.random() * 15 + 5).toFixed(0) + '% from yesterday';
+      } else {
+        comparisonBadge.className = 'comparison-badge comparison-down';
+        comparisonBadge.innerHTML = '<i class="fas fa-arrow-down"></i> ' + (Math.random() * 10 + 5).toFixed(0) + '% from yesterday';
+      }
+    }, 5000);
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      renderDevices();
+      loadPredictions(); // <--- this line loads data into chart
+      loadDeviceUsage();
+      // ⏱️ Auto logging every 10 seconds
+      setInterval(autoLogEnergyUsage, 10000); // log energy
+  setInterval(() => {
+    loadPredictions();
+    loadDeviceUsage();
+  }, 10000); // refresh charts
+  setInterval(updateLiveCost, 5000); // Update cost every 5 seconds
+    });
+// Replace old connection code with this:
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/yourdbname')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+const API_BASE_URL = 'http://localhost:5000/api'; // Replace if needed  
+// Fetch predictions
+async function loadPredictions() {
+  try {
+    const response = await fetch("http://localhost:5000/api/energy/history");
+    const data = await response.json();
+
+    const labels = data.map((entry, index) => `Entry ${index + 1}`);
+    const actual = data.map(entry => entry.actualUsage);
+    const predicted = data.map(entry => entry.predictedUsage);
+
+    energyPredictionChart.data.labels = labels;
+    energyPredictionChart.data.datasets[0].data = predicted;   // Predicted Energy
+    energyPredictionChart.data.datasets[1].data = actual;      // Actual Energy
+
+    energyPredictionChart.update();
+  } catch (error) {
+    console.error("Error loading predictions:", error);
+  }
+}
+
+  
+  // Update Chart.js
+  energyChart.data.labels = data.map(d => new Date(d.timestamp).toLocaleTimeString());
+  energyChart.data.datasets[0].data = data.map(d => d.actualUsage);
+  energyChart.data.datasets[1].data = data.map(d => d.predictedUsage);
+  energyChart.update();
+
+// Send new data (e.g., from smart devices)
+async function logEnergy(usage, devices) {
+  const prediction = await fetch('http://localhost:5000/api/energy/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      actualUsage: usage,
+      predictedUsage: null, // Let backend calculate
+      devices: devices.map(d => ({
+        deviceId: d.id,
+        power: d.wattage,
+        duration: d.hoursUsed
+      }))
+    })
+  });
+}
+async function refreshDevices() {
+  const devices = await (await fetch(`${API_URL}/devices`)).json();
+  // Render devices to your HTML table
+}
+setInterval(refreshDevices, 5000); // Update every 5 seconds
+
+// 🔘 TEST BUTTON FUNCTION TO SEND PREDICTION DATA
+async function testAddDevice() {
+  try {
+    const response = await fetch('http://localhost:5000/api/energy/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        actualUsage: 2.4,
+        devices: [
+          { deviceId: "test-1", power: 500, duration: 2 }
+        ]
+      })
+    });
+    const result = await response.json();
+    alert(`Test data sent!\nPredicted usage: ${result.predictedUsage} kWh`);
+  } catch (error) {
+    console.error("Error sending test device:", error);
+    alert("Failed to send test data.");
+  }
+}
+setInterval(() => {
+  loadPredictions();  // auto-update the chart
+}, 10000);
+
+async function loadDeviceUsage() {
+  try {
+    const res = await fetch('http://localhost:5000/api/energy/summary/device-usage');
+    const usage = await res.json();
+
+    const labels = Object.keys(usage);
+    const values = Object.values(usage);
+
+    new Chart(document.getElementById('deviceUsageChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Device Energy Usage (kWh)',
+          data: values,
+          backgroundColor: 'rgba(255, 159, 64, 0.6)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'kWh'
+            }
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("Failed to load device usage:", err);
+  }
+}
+async function autoLogEnergyUsage() {
+  const activeDevices = devices.filter(d => d.status === 'on');
+
+  if (activeDevices.length === 0) return;
+
+  const actualUsage = activeDevices.reduce((sum, d) => sum + (d.wattage * 1) / 1000, 0); // assume 1 hour for demo
+
+  const devicesPayload = activeDevices.map(d => ({
+    deviceId: d.id,
+    power: d.wattage,
+    duration: 1 // fake 1 hour for demo
+  }));
+
+  await fetch('http://localhost:5000/api/energy/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      actualUsage,
+      devices: devicesPayload
+    })
+  });
+
+  console.log("Auto-logged energy usage:", actualUsage);
+}
+
+function sendTestPrediction() {
+    fetch('/api/predict')
+      .then(res => res.json())
+      .then(data => {
+        alert('Predicted Value: ' + data.predictedValue);
+        console.log('Predicted Value:', data.predictedValue);
+      })
+      .catch(err => {
+        alert('Failed to send prediction');
+        console.error(err);
+      });
+  }
+
+  function sendPrediction() {
+  console.log('✅ Send Test Prediction clicked');
+
+  fetch('http://localhost:5000/predict', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  .then(res => {
+    if (!res.ok) throw new Error('Server error');
+    return res.json();
+  })
+  .then(data => {
+    alert('Prediction: ' + data.predicted + 'KWh');
+  })
+  .catch(err => {
+    alert('❌ Failed to send prediction');
+    console.error(err);
+  });
+}
+
+</script>
+
+</body>
+</html>
