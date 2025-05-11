@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/energydb', {
+mongoose.connect('mongodb+srv://naseeroddin:Yallah@123@cluster0.mongodb.net/smartenergy', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
