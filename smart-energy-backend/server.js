@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://naseeroddin:Yallah@123@cluster0.nmwimcs.mongodb.net/smartenergy?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect("mongodb+srv://naseeroddin:Yallah@123@cluster0.nmwimcs.mongodb.net/smartenergy?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
