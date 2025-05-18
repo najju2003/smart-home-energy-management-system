@@ -129,3 +129,12 @@ const PORT = 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+//connecting front to backend
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../smart-energy-frontend')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../smart-energy-frontend/index.html'));
+});
+
