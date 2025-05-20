@@ -96,30 +96,42 @@ const { spawn } = require('child_process');
 app.post('/predict', (req, res) => {
   const py = spawn('python', ['ml/predict.py']);
 
-  let result = '';
-  let error = '';
+  let result = "";
+  let error = "";
 
-  py.stdout.on('data', (data) => {
+  py.stdout.on("data", (data) => {
     result += data.toString();
   });
 
-  py.stderr.on('data', (data) => {
+  /*py.stderr.on("data", (data) => {
     error += data.toString();
     console.error('❌ Python error:', data.toString());
-  });
+  });*/
 
-  py.on('close', (code) => {
-    if (error) {
-      return res.status(500).json({ message: 'Python script error', error });
+  py.on("close", (code) => {
+    if (code !== 0 || error) {
+      /*return res.status(500).json({ message: 'Python script error', error });
+    }*/
+    console.error("Python script error:", error || `Exit code: ${code}`);
+      return res.status(500).json({
+        message: "Python script error",
+        error: error || `Exited with code ${code}`,
+      });
     }
 
     const predicted = parseFloat(result.trim());
     if (!isNaN(predicted)) {
-      res.json({ predicted });
+      /*res.json({ predicted });
     } else {
       console.error('❌ Invalid prediction result:', result);
       res.status(500).json({ message: 'Prediction failed', result });
     }
+  });
+});*/
+  return res.status(500).json({ message: "Prediction failed", result });
+    }
+
+    res.json({ predicted: prediction });
   });
 });
 
