@@ -1269,7 +1269,7 @@ function sendTestPrediction() {
   }
 
   function sendPrediction() {
-  console.log('✅ Send Test Prediction clicked');
+  //console.log('✅ Send Test Prediction clicked');//
 
   fetch('https://smart-home-energy-management-system.onrender.com/predict', {
     method: 'POST',
@@ -1286,8 +1286,8 @@ function sendTestPrediction() {
     alert('Prediction: ' + data.predicted + 'KWh');
   })
   .catch(err => {
-    alert('❌ Failed to send prediction');
-    console.error(err);
+    alert("❌ Failed to send prediction");
+    console.error("perdiction error:", err);
   });
 }
 
