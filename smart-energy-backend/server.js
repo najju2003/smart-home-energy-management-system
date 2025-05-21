@@ -95,33 +95,22 @@ app.get('/device-usage', async (req, res) => {
 const { spawn } = require('child_process');
 
 app.post('/predict', (req, res) => {
-  const py = spawn('python', ['ml/predict.py']);
+  const py = spawn('python3', ['ml/predict.py']); // ✅ 'python3' for Render
 
   let result = '';
-  let error = '';
+  py.stdout.on('data', data => result += data.toString());
 
-  py.stdout.on('data', (data) => {
-    result += data.toString();
-  });
+  py.stderr.on('data', err => console.error('PY STDERR:', err.toString()));
 
-  py.stderr.on('data', (data) => {
-    error += data.toString();
-  });
-
-  py.on('close', (code) => {
-    if (error || code !== 0) {
-      console.error('Python script error:', error || `Exit code: ${code}`);
-      return res.status(500).json({ message: 'Prediction failed' });
-    }
-
+  py.on('close', code => {
     const predicted = parseFloat(result.trim());
     if (isNaN(predicted)) {
-      return res.status(500).json({ message: 'Invalid prediction result' });
+      return res.status(500).json({ message: 'Prediction failed' });
     }
-
     res.json({ predicted });
   });
 });
+
 
 
 // Start server
