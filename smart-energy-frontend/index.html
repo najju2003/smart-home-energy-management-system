@@ -1268,7 +1268,8 @@ function sendTestPrediction() {
       });
   }
 
-  function sendPrediction() {
+ //this code is not working and i am give file number is 1//
+   /* 1 function sendPrediction() {
   //console.log('✅ Send Test Prediction clicked');//
 
   fetch('https://smart-home-energy-management-system.onrender.com/predict', {
@@ -1289,7 +1290,24 @@ function sendTestPrediction() {
     alert("❌ Failed to send prediction");
     console.error("perdiction error:", err);
   });
+} 1 */
+    //this is code is update sendPrediction and that file number 1 is not wrking so i create this file//
+    function sendPrediction() {
+  fetch("https://your-render-url.onrender.com/predict", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  })
+  .then(res => res.json())
+  .then(data => alert("Prediction: " + data.predicted + " kWh"))
+  .catch(err => {
+    alert("❌ Failed to send prediction");
+    console.error(err);
+  });
 }
+    
 
 </script>
 
