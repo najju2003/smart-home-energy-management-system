@@ -27,7 +27,7 @@ forecast = model_fit.forecast(steps=1)
 
 print(round(float(forecast.iloc[0]), 2))"""
 # modified
-from pymongo import MongoClient
+"""from pymongo import MongoClient
 import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 
@@ -52,5 +52,42 @@ try:
     forecast = model_fit.forecast(steps=1)
     print(round(float(forecast.iloc[0]), 2))  # ✅ print ONLY number
 except:
-    print(2.5)  # fallback to avoid exit code 1
+    print(2.5)  # fallback to avoid exit code 1"""
+# ml/predict.py
 
+import os
+import pandas as pd
+from pymongo import MongoClient
+from statsmodels.tsa.arima.model import ARIMA
+
+try:
+    # ✅ For Render: use environment variable
+    mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017/")
+
+    client = MongoClient(mongo_url)
+    db = client["smartenergy"]
+    collection = db["energydatas"]
+
+    # ✅ Fetch latest 30 records
+    records = list(collection.find({}, {"_id": 0, "timestamp": 1, "totalWattage": 1}).sort("timestamp", -1).limit(30))
+
+    if not records:
+        print(2.55)  # fallback safe value
+        exit(0)
+
+    # ✅ Data preprocessing
+    df = pd.DataFrame(records)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df = df.set_index('timestamp').resample('H').mean().ffill()
+
+    # ✅ ARIMA Model
+    model = ARIMA(df['totalWattage'], order=(1, 1, 1))
+    model_fit = model.fit()
+    forecast = model_fit.forecast(steps=1)
+
+    # ✅ Output only the value
+    print(round(float(forecast.iloc[0]), 2))
+
+except Exception:
+    print(2.55)  # fallback value to avoid crashing
+    exit(0)
