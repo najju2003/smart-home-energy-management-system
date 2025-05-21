@@ -95,7 +95,7 @@ app.get('/device-usage', async (req, res) => {
 const { spawn } = require('child_process');
 
 app.post('/predict', (req, res) => {
-  const py = spawn('python3', ['ml/predict.py']);
+  const py = spawn('python', ['ml/predict.py']);
 
   let result = '';
   let error = '';
