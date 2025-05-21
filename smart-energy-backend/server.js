@@ -91,67 +91,34 @@ app.get('/device-usage', async (req, res) => {
 });
 
 // ✅ Route: POST /predict (fixed)
-/* 1 const { spawn } = require('child_process');
-
-app.post('/predict', (req, res) => {
-  const py = spawn('python', ['ml/predict.py']);
-
-  let result = "";
-  let error = "";
-
-  py.stdout.on("data", (data) => {
-    result += data.toString();
-  });
-
-  /*py.stderr.on("data", (data) => {
-    error += data.toString();
-    console.error('❌ Python error:', data.toString());
-  }); 1*/
-
-/* 2  py.on("close", (code) => {
-    if (code !== 0 || error) { 2*/
-      /*return res.status(500).json({ message: 'Python script error', error });
-    }*/
- /*3   console.error("Python script error:", error || `Exit code: ${code}`);
-      return res.status(500).json({
-        message: "Python script error",
-        error: error || `Exited with code ${code}`,
-      });
-    }
-
-    const predicted = parseFloat(result.trim());
-    if (!isNaN(predicted)) { 3 */
-      /*res.json({ predicted });
-    } else {
-      console.error('❌ Invalid prediction result:', result);
-      res.status(500).json({ message: 'Prediction failed', result });
-    }
-  });
-});*/
-      //that upper line is not working so i create this below line and still not working//
- /* return res.status(500).json({ message: "Prediction failed", result });
-    }
-
-   res.json({ predicted: prediction });
-  });
-});*/
-//update that server.js file for predioctio.py is failed and this file that upper file is not orkin so i create this
 
 const { spawn } = require('child_process');
 
 app.post('/predict', (req, res) => {
-  const py = spawn('python3', ['ml/predict.py']); // ✅ 'python3' for Render
+  const py = spawn('python3', ['ml/predict.py']);
 
   let result = '';
-  py.stdout.on('data', data => result += data.toString());
+  let error = '';
 
-  py.stderr.on('data', err => console.error('PY STDERR:', err.toString()));
+  py.stdout.on('data', (data) => {
+    result += data.toString();
+  });
 
-  py.on('close', code => {
-    const predicted = parseFloat(result.trim());
-    if (isNaN(predicted)) {
+  py.stderr.on('data', (data) => {
+    error += data.toString();
+  });
+
+  py.on('close', (code) => {
+    if (error || code !== 0) {
+      console.error('Python script error:', error || `Exit code: ${code}`);
       return res.status(500).json({ message: 'Prediction failed' });
     }
+
+    const predicted = parseFloat(result.trim());
+    if (isNaN(predicted)) {
+      return res.status(500).json({ message: 'Invalid prediction result' });
+    }
+
     res.json({ predicted });
   });
 });
